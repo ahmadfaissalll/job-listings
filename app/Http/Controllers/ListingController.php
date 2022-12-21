@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Data\Contoh;
 use App\Exceptions\ValidationException;
 use App\Models\Listing;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Contracts\Encryption\EncryptException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use League\CommonMark\Extension\CommonMark\Node\Inline\Strong;
 
 class ListingController extends Controller
 {
@@ -96,7 +98,7 @@ class ListingController extends Controller
   }
 
   // Show single listing
-  public function show(Request $request, Listing $listing)
+  public function show(Request $request, string $id)
   {
     // echo $request->cookie('nama');
     // exit;
@@ -113,6 +115,15 @@ class ListingController extends Controller
     // request()->schemeAndHttpHost() . "<br>";
     // dd(request()->hasHeader('user-AGEN'));
     // dd(request()->ip());
+
+    try {
+      $id = Crypt::decryptString($id);
+    } catch(DecryptException) {
+      return "<p>Terjadi kesalahan, silahkan <a href='/'>kembali</a></p>";
+    }
+    
+    $listing = Listing::find($id);
+
     return response(view('listings.show', [
       'listing' => $listing,
     ]))->withoutCookie('nama');
@@ -202,10 +213,10 @@ class ListingController extends Controller
 
           $formFields['logo'] = "logos/$logoName";
         } catch (ValidationException $error) {
-          dd($error->getMessage());
+          return back()->with('message', $error->getMessage());
         }
       } else {
-        dd('invalid');
+        return back()->with('message', 'Terjadi error silahkan coba dalam beberapa saat lagi');
       }
     }
 
@@ -214,22 +225,36 @@ class ListingController extends Controller
     return redirect('/listings')->with('message', 'Listing created successfully!');
   }
 
-  public function edit(Listing $listing)
+  public function edit(string $id)
   {
+    try {
+      $id = Crypt::decryptString($id);
+    } catch (DecryptException) {
+      return back()->with('message', "Terjadi kesalahan, silahkan coba dalam beberapa saat lagi");
+    }
+    
+    $listing = Listing::find($id);
+
     return response()
       ->view('listings.edit', [
         'listing' => $listing,
       ]);
   }
 
-  public function update(Request $request, Listing $listing)
+  public function update(Request $request, string $id)
   {
-
     $formFields = $this->validateRequest($request, 'update');
+
+    try {
+      $id = Crypt::decryptString($id);
+    } catch (DecryptException) {
+      return back()->with('message', "Terjadi kesalahan, silahkan coba dalam beberapa saat lagi");
+    }
+    
+    $listing = Listing::find($id);
 
     if ($request->hasFile('logo')) {
       if ($request->file('logo')->isValid()) {
-
         try {
 
           $logo = $request->file('logo');
@@ -244,7 +269,7 @@ class ListingController extends Controller
           }
 
           // hapus logo sebelumnya jika ada
-          if ($listing->logo !== null) Storage::delete($listing->logo);
+          if ($listing->logo !== null) Storage::disk()->delete($listing->logo);
 
           // simpan gambar ke folder
           $logo->storePubliclyAs(
@@ -255,16 +280,18 @@ class ListingController extends Controller
 
           $formFields['logo'] = "logos/$logoName";
         } catch (ValidationException $error) {
-          dd($error->getMessage());
+          return back()->with('message', $error->getMessage());
         }
       } else {
-        dd('invalid');
+        return back()->with('message', 'Terjadi error silahkan coba dalam beberapa saat lagi');
       }
     }
 
     $listing->update($formFields);
 
-    return back()->with('message', 'Listing updated successfully!');
+    $encryptedId = Crypt::encryptString($listing->id);
+
+    return redirect("listings/$encryptedId")->with('message', 'Listing updated successfully!');
   }
 
   /**
@@ -273,14 +300,20 @@ class ListingController extends Controller
    * @param  int  $id
    * @return \Illuminate\Http\Response
    */
-  public function destroy($id)
+  public function destroy(string $id)
   {
+    try {
+      $id = Crypt::decryptString($id);
+    } catch (DecryptException) {
+      return back()->with('message', "Terjadi masalah, silahkan coba dalam beberapa saat lagi");
+    }
+
     Listing::destroy($id);
 
-    return redirect('listings.index');
+    return redirect()->route('listings.index')->with('message', 'Listing deleted successfully!');
   }
 
-  private function validateRequest(Request $request, $action)
+  private function validateRequest(Request $request, string $action)
   {
     // value paramater action store|update
 
