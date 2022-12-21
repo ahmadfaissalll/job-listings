@@ -12,7 +12,6 @@
 } ?>
 <?php unset($__defined_vars); ?>
 
-
 <?php if (isset($component)) { $__componentOriginalc254754b9d5db91d5165876f9d051922ca0066f4 = $component; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.card','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('card'); ?>
@@ -26,7 +25,7 @@
         <img class="hidden w-48 mr-6 md:block" src="<?php echo e($listing->logo !== null ? asset($listing->logo) : asset('images/no-image.png')); ?>" alt="<?php echo e($listing->title); ?>" />
         <div>
             <h3 class="text-2xl">
-                <a href="/listings/<?php echo e($listing->id); ?>"><?php echo e($listing->title); ?></a>
+                <a href="/listings/<?php echo e(Crypt::encryptString($listing->id)); ?>"><?php echo e($listing->title); ?></a>
             </h3>
             <div class="text-xl font-bold mb-4"><?php echo e($listing->company); ?></div>
             <?php if (isset($component)) { $__componentOriginalc254754b9d5db91d5165876f9d051922ca0066f4 = $component; } ?>

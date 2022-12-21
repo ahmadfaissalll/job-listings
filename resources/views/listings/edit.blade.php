@@ -1,4 +1,5 @@
 <x-layout>
+    <x-flash-message />
     <x-card class="p-10 max-w-lg mx-auto mt-24">
         <header class="text-center">
             <h2 class="text-2xl font-bold uppercase mb-1">
@@ -7,7 +8,7 @@
             <p class="mb-4">Edit: {{ $listing->title }}</p>
         </header>
 
-        <form action="/listings/{{ $listing->id }}" method="post" enctype="multipart/form-data">
+        <form action="/listings/{{ Crypt::encryptString($listing->id) }}" method="post" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="mb-6">
@@ -79,8 +80,7 @@
                 <label for="logo" class="inline-block text-lg mb-2">
                     Company Logo
                 </label>
-                <input type="file" class="border border-gray-200 rounded p-2 w-full" name="logo"
-                    accept="image/*" />
+                <input type="file" class="border border-gray-200 rounded p-2 w-full" name="logo" accept="image/*" />
 
                 <img class="w-48 mr-6 mb-6"
                     src="{{ $listing->logo !== null ? "/$listing->logo" : asset('images/no-image.png') }}"

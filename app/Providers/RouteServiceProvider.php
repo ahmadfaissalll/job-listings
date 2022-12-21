@@ -53,7 +53,7 @@ class RouteServiceProvider extends ServiceProvider
 
 
     // for '/listings/{listing}' route
-    Route::pattern('listing', '[0-9]+');
+    // Route::pattern('listing', '[0-9]+');
   }
 
   /**

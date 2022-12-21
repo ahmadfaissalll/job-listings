@@ -1,6 +1,8 @@
 <x-layout>
     @include('partials._search')
 
+    <x-flash-message/>
+
     @if (isset($listing))
         <a href="/listings" class="inline-block text-black ml-4 mb-4"><i class="fa-solid fa-arrow-left"></i> Back
         </a>
@@ -43,9 +45,15 @@
             </x-card>
 
             <x-card class="mt-4 p-2 flex space-x-6">
-              <a href="/listings/{{ $listing->id }}/edit">
+              <a href="/listings/{{ Crypt::encryptString($listing->id) }}/edit">
                 <i class="fa-solid fa-pencil"></i> Edit
               </a>
+
+              <form action="/listings/{{ Crypt::encryptString($listing->id) }}" method="post">
+                @csrf
+                @method('DELETE')
+                <button class="text-red-500" onclick="return confirm('Are you sure wanna delete this job post?')"><i class="fa-solid fa-trash"></i> Delete </button>
+              </form>
             </x-card>
         </div>
     @else

@@ -5,5 +5,4 @@
 
         </p>
     </div>
-<?php endif; ?>
-<?php /**PATH C:\xampp\htdocs\LARAVEL\job-listings\resources\views/components/flash-message.blade.php ENDPATH**/ ?>
+<?php endif; ?><?php /**PATH C:\xampp\htdocs\LARAVEL\job-listings\resources\views/components/flash-message.blade.php ENDPATH**/ ?>

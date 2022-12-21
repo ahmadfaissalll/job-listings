@@ -38,9 +38,15 @@ Route::redirect('/', '/listings');
 // Route::delete('/listings/{listing}', 'destroy');
 // });
 
-Route::resource('listings', ListingController::class)
-  ->missing(function () {
-    return Redirect::route('listings.index', status: 301);
-  });
+
+// Show Register/Create Form
+Route::controller(UserController::class)->group(function() {
+  Route::get('/register', 'register');
+});
+
+Route::resource('listings', ListingController::class);
+  // ->missing(function () {
+  //   return Redirect::route('listings.index', status: 301);
+  // });
 
 // Route::fallback(fn() => 'Halaman tidak ada');
