@@ -95,7 +95,8 @@
 <?php unset($__componentOriginalc254754b9d5db91d5165876f9d051922ca0066f4); ?>
 <?php endif; ?>
 
-            <?php if (isset($component)) { $__componentOriginalc254754b9d5db91d5165876f9d051922ca0066f4 = $component; } ?>
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('show-manipulate-listing', $listing)): ?>
+                <?php if (isset($component)) { $__componentOriginalc254754b9d5db91d5165876f9d051922ca0066f4 = $component; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.card','data' => ['class' => 'mt-4 p-2 flex space-x-6']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('card'); ?>
 <?php if ($component->shouldRender()): ?>
@@ -104,21 +105,23 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['class' => 'mt-4 p-2 flex space-x-6']); ?>
-              <a href="/listings/<?php echo e(Crypt::encryptString($listing->id)); ?>/edit">
-                <i class="fa-solid fa-pencil"></i> Edit
-              </a>
+                    <a href="/listings/<?php echo e(Crypt::encryptString($listing->id)); ?>/edit">
+                        <i class="fa-solid fa-pencil"></i> Edit
+                    </a>
 
-              <form action="/listings/<?php echo e(Crypt::encryptString($listing->id)); ?>" method="post">
-                <?php echo csrf_field(); ?>
-                <?php echo method_field('DELETE'); ?>
-                <button class="text-red-500" onclick="return confirm('Are you sure wanna delete this post job?')"><i class="fa-solid fa-trash"></i> Delete </button>
-              </form>
-             <?php echo $__env->renderComponent(); ?>
+                    <form action="/listings/<?php echo e(Crypt::encryptString($listing->id)); ?>" method="post">
+                        <?php echo csrf_field(); ?>
+                        <?php echo method_field('DELETE'); ?>
+                        <button class="text-red-500" onclick="return confirm('Are you sure wanna delete this job post?')"><i
+                                class="fa-solid fa-trash"></i> Delete </button>
+                    </form>
+                 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__componentOriginalc254754b9d5db91d5165876f9d051922ca0066f4)): ?>
 <?php $component = $__componentOriginalc254754b9d5db91d5165876f9d051922ca0066f4; ?>
 <?php unset($__componentOriginalc254754b9d5db91d5165876f9d051922ca0066f4); ?>
 <?php endif; ?>
+            <?php endif; ?>
         </div>
     <?php else: ?>
         <p>Listing not found</p>

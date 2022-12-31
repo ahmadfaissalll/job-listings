@@ -2,21 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Data\Contoh;
-use App\Exceptions\ValidationException;
 use App\Models\Listing;
-use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Contracts\Encryption\EncryptException;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Cookie;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
+use App\Exceptions\ValidationException;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class ListingController extends Controller
 {
+
+  public function __construct()
+  {
+    // $this->middleware('auth');
+    //     $this->middleware('log')->only('index');
+    $this->middleware('auth')->except(['index', 'show']);
+    // $this->middleware('auth')->only('create');
+  }
+
   // Show all listings
   public function index(Request $request)
   {
@@ -86,7 +92,10 @@ class ListingController extends Controller
     // }));
 
     // $listings = Listing::latest()->filter(request(['tag', 'search']))->simplePaginate(6);
-    $listings = Listing::latest()->filter(request(['tag', 'search']))->paginate(6);
+    // $listings = Listing::orderByDesc('created_at')->filter(request(['tag', 'search']))->paginate(6);
+    // $listings = Listing::orderByDesc('created_at')->filter(request(['tag', 'search']))->paginate(6);
+
+    $listings = auth()->user()->listings()->filter(request(['tag', 'search']))->paginate(6);
 
     return response()
       ->view('listings.index', [
@@ -117,12 +126,18 @@ class ListingController extends Controller
     // dd(request()->ip());
 
     try {
-      $id = Crypt::decryptString($id);
-    } catch(DecryptException) {
+      // $id = Crypt::decryptString($id);
+      $id = decrypt($id, unserialize: false);
+    } catch (DecryptException) {
       return "<p>Terjadi kesalahan, silahkan <a href='/'>kembali</a></p>";
     }
-    
-    $listing = Listing::find($id);
+
+    $listing = Listing::findOrFail($id);
+
+    // tampilkan error 403 jika user bukan pemilik listing
+    if (Gate::denies('manipulate-listing', $listing)) {
+      abort(403);
+    }
 
     return response(view('listings.show', [
       'listing' => $listing,
@@ -132,7 +147,6 @@ class ListingController extends Controller
   // Show Create Form
   public function create()
   {
-
     // request()->merge(['id' => 1]);
     // dd(request()->has('id', 'name', 'efwfwe'));
     // dd(request()->hasAny('id', 'name', 'efwfwe'));
@@ -186,40 +200,49 @@ class ListingController extends Controller
     // $request->except(['id']);
     // dd($request->input('id'));
 
-    $formFields = $this->validateRequest($request, 'store');
-
+    $formFields = $request->validate([
+      'title' => 'required',
+      'company' => 'required|unique:listings',
+      'location' => 'required',
+      'website' => 'required',
+      'email' => 'required|email:rfc,dns',
+      'tags' => 'required',
+      'logo' => 'file',
+      'description' => 'required',
+    ], [
+      'company.unique' => 'Email sudah ada',
+      'email.email' => 'Masukkin email nya yang valid!',
+    ]);
 
     if ($request->hasFile('logo')) {
-      if ($request->file('logo')->isValid()) {
+      try {
+        $logo = $request->file('logo');
 
-        try {
-          $logo = $request->file('logo');
+        $logoName = $logo->hashName();
+        $logoExtension = $logo->extension();
 
-          $logoName = $logo->hashName();
-          $logoExtension = $logo->extension();
+        $allowedExtension = ['jpeg', 'jpg', 'png'];
 
-          $allowedExtension = ['jpeg', 'jpg', 'png'];
-
-          if (!in_array($logoExtension, $allowedExtension)) {
-            throw new ValidationException("Format $logoExtension is not allowed");
-          }
-
-          // simpan gambar ke folder
-          $logo->storePubliclyAs(
-            'logos',
-            $logoName,
-            'public'
-          );
-
-          $formFields['logo'] = "logos/$logoName";
-        } catch (ValidationException $error) {
-          return back()->with('message', $error->getMessage());
+        if (!in_array($logoExtension, $allowedExtension)) {
+          throw new ValidationException("Format $logoExtension is not allowed");
         }
-      } else {
-        return back()->with('message', 'Terjadi error silahkan coba dalam beberapa saat lagi');
+
+        // simpan gambar ke folder
+        $logo->storePubliclyAs(
+          'logos',
+          $logoName,
+          'public'
+        );
+
+        $formFields['logo'] = "logos/$logoName";
+      } catch (ValidationException $error) {
+        return back()->with('message', $error->getMessage());
       }
+    } else {
+      return back()->with('message', 'Terjadi error silahkan coba dalam beberapa saat lagi');
     }
 
+    $formFields['user_id'] = Auth::id();
     Listing::create($formFields);
 
     return redirect('/listings')->with('message', 'Listing created successfully!');
@@ -232,8 +255,13 @@ class ListingController extends Controller
     } catch (DecryptException) {
       return back()->with('message', "Terjadi kesalahan, silahkan coba dalam beberapa saat lagi");
     }
-    
-    $listing = Listing::find($id);
+
+    $listing = Listing::findOrFail($id);
+
+    // tampilkan error 403 jika user bukan pemilik listing
+    if (Gate::denies('manipulate-listing', $listing)) {
+      abort(403);
+    }
 
     return response()
       ->view('listings.edit', [
@@ -243,47 +271,59 @@ class ListingController extends Controller
 
   public function update(Request $request, string $id)
   {
-    $formFields = $this->validateRequest($request, 'update');
-
     try {
       $id = Crypt::decryptString($id);
     } catch (DecryptException) {
       return back()->with('message', "Terjadi kesalahan, silahkan coba dalam beberapa saat lagi");
     }
-    
-    $listing = Listing::find($id);
+
+    $listing = Listing::findOrFail($id);
+
+    // tampilkan error 403 jika user bukan pemilik listing
+    if (Gate::denies('manipulate-listing', $listing)) {
+      abort(403);
+    }
+
+    $formFields = $request->validate([
+      'title' => 'required',
+      'company' => ['required', Rule::unique('listings', 'company')->ignore($listing)],
+      'location' => 'required',
+      'website' => 'required',
+      'email' => 'required|email',
+      'tags' => 'required',
+      'logo' => 'file',
+      'description' => 'required',
+    ], [
+      'email.email' => 'Masukkin email nya yang valid!',
+    ]);
 
     if ($request->hasFile('logo')) {
-      if ($request->file('logo')->isValid()) {
-        try {
+      try {
 
-          $logo = $request->file('logo');
+        $logo = $request->file('logo');
 
-          $logoName = $logo->hashName();
-          $logoExtension = $logo->extension();
+        $logoName = $logo->hashName();
+        $logoExtension = $logo->extension();
 
-          $allowedExtension = ['jpeg', 'jpg', 'png'];
+        $allowedExtension = ['jpeg', 'jpg', 'png'];
 
-          if (!in_array($logoExtension, $allowedExtension)) {
-            throw new ValidationException("Format $logoExtension is not allowed");
-          }
-
-          // hapus logo sebelumnya jika ada
-          if ($listing->logo !== null) Storage::disk()->delete($listing->logo);
-
-          // simpan gambar ke folder
-          $logo->storePubliclyAs(
-            'logos',
-            $logoName,
-            'public'
-          );
-
-          $formFields['logo'] = "logos/$logoName";
-        } catch (ValidationException $error) {
-          return back()->with('message', $error->getMessage());
+        if (!in_array($logoExtension, $allowedExtension)) {
+          throw new ValidationException("Format $logoExtension is not allowed");
         }
-      } else {
-        return back()->with('message', 'Terjadi error silahkan coba dalam beberapa saat lagi');
+
+        // hapus logo sebelumnya jika ada
+        if ($listing->logo !== null) Storage::disk()->delete($listing->logo);
+
+        // simpan gambar ke folder
+        $logo->storePubliclyAs(
+          'logos',
+          $logoName,
+          'public'
+        );
+
+        $formFields['logo'] = "logos/$logoName";
+      } catch (ValidationException $error) {
+        return back()->with('message', $error->getMessage());
       }
     }
 
@@ -291,7 +331,7 @@ class ListingController extends Controller
 
     $encryptedId = Crypt::encryptString($listing->id);
 
-    return redirect("listings/$encryptedId")->with('message', 'Listing updated successfully!');
+    return redirect()->route('listings.show', $encryptedId)->with('message', 'Listing updated successfully!');
   }
 
   /**
@@ -308,33 +348,21 @@ class ListingController extends Controller
       return back()->with('message', "Terjadi masalah, silahkan coba dalam beberapa saat lagi");
     }
 
+    $listing = Listing::findOrFail($id);
+
+    // tampilkan error 403 jika user bukan pemilik listing
+    if (Gate::denies('manipulate-listing', $listing)) {
+      abort(403);
+    }
+
     Listing::destroy($id);
 
     return redirect()->route('listings.index')->with('message', 'Listing deleted successfully!');
   }
 
-  private function validateRequest(Request $request, string $action)
+  // Manage Listings
+  public function manage()
   {
-    // value paramater action store|update
-
-    $formFields = $request->validate([
-      'title' => 'required',
-      'company' => 'required',
-      'location' => 'required',
-      'website' => 'required',
-      'email' => 'required|email',
-      'tags' => 'required',
-      'description' => 'required',
-    ], [
-      'email.email' => 'Masukkin email nya yang valid!',
-    ]);
-
-    if (strtolower($action) == 'store') {
-      $request->validate([
-        'company' => Rule::unique('listings', 'company'),
-      ]);
-    }
-
-    return $formFields;
+    return view('listings.manage', ['listings' => auth()->user()->listings()->paginate(10)]);
   }
 }

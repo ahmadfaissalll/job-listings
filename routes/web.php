@@ -1,9 +1,8 @@
 <?php
 
-use App\Http\Controllers\ListingController;
-use Clockwork\Request\Request;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\{UserController, ListingController};
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,10 +38,27 @@ Route::redirect('/', '/listings');
 // });
 
 
-// Show Register/Create Form
 Route::controller(UserController::class)->group(function() {
-  Route::get('/register', 'register');
+  Route::middleware('guest')->group(function() {
+    // Show Register/Create Form
+    Route::get('/register', 'create');
+  
+    // Create New User
+    Route::post('/register', 'store');
+    
+    // Show login form
+    Route::get('/login', 'login')->name('login');
+  
+    // log in user
+    Route::post('/login', 'authenticate');
+  });
+  
+  // logout
+  Route::post('/logout', 'logout')->middleware('auth');
 });
+
+// Manage Listings
+Route::get('/listings/manage', [ListingController::class, 'manage'])->middleware('auth');
 
 Route::resource('listings', ListingController::class);
   // ->missing(function () {

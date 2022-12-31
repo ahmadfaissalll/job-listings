@@ -3,30 +3,31 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Faker\Factory as Faker;
-
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Listing>
  */
 class ListingFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
-    public function definition()
-    {
+  /**
+   * Define the model's default state.
+   *
+   * @return array<string, mixed>
+   */
+  public function definition()
+  {
 
-        return [
-            'title' => $this->faker->sentence(),
-            'tags' => 'laravel, api, backend',
-            'company' => $this->faker->company(),
-            'email' => $this->faker->companyEmail(),
-            'website' => $this->faker->url(),
-            'location' => $this->faker->city(),
-            'description' => $this->faker->paragraph(5),
-        ];
-    }
+    return [
+      'user_id' => collect([2,4,5])->random(),
+      'title' => $this->faker->sentence(),
+      'logo' => collect(Storage::disk('public')->allFiles('logos'))->random(),
+      'tags' => 'laravel, api, backend',
+      'company' => $this->faker->company(),
+      'email' => $this->faker->companyEmail(),
+      'website' => $this->faker->url(),
+      'location' => $this->faker->city(),
+      'description' => $this->faker->paragraph(5),
+    ];
+  }
 }

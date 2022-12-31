@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Listing extends Model
 {
   use HasFactory;
+
+  protected $with = ['user'];
 
   // protected $fillable = [
   //   'title',
@@ -21,6 +24,10 @@ class Listing extends Model
 
   public function getRouteKeyName() {
     return 'id';
+  }
+
+  public function user() {
+    return $this->belongsTo(User::class, 'user_id');
   }
 
   public function scopeFilter($query, array $filters)

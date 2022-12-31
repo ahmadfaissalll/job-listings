@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Listing;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -17,6 +16,14 @@ class DatabaseSeeder extends Seeder
   {
     \App\Models\User::factory(5)->create();
 
-    Listing::factory(10)->create();
+    Listing::factory(20)->create();
+    
+    Listing::factory(18)->create([
+      'user_id' => 1,
+    ]);
+
+    Listing::factory(18)->create([
+      'user_id' => 3,
+    ]);
   }
 }

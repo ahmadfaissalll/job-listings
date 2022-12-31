@@ -20,7 +20,7 @@
 <ul class="flex">
     <?php $__currentLoopData = $tags; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tag): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <li class="flex items-center justify-center bg-black text-white rounded-xl py-1 px-3 mr-2 text-xs">
-            <a href="/?tag=<?php echo e($tag); ?>"><?php echo e($tag); ?></a>
+            <a href="/listings?tag=<?php echo e($tag); ?>"><?php echo e($tag); ?></a>
         </li>
     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </ul>

@@ -29,18 +29,38 @@
 
 <body class="mb-48">
     <nav class="flex justify-between items-center mb-4">
-        <a href="/" class="select-none"><img class="w-24" src="<?php echo e(asset('images/logo.png')); ?>" alt="Logo"
+        <a href="/listings" class="select-none"><img class="w-24" src="<?php echo e(asset('images/logo.png')); ?>" alt="Logo"
                 class="logo" /></a>
         <ul class="flex space-x-6 mr-6 text-lg">
-            <li>
-                <a href="register.html" class="hover:text-laravel select-none"><i class="fa-solid fa-user-plus"></i>
-                    Register</a>
-            </li>
-            <li>
-                <a href="login.html" class="hover:text-laravel select-none"><i
-                        class="fa-solid fa-arrow-right-to-bracket"></i>
-                    Login</a>
-            </li>
+            <?php if(auth()->guard()->check()): ?>
+                <li>
+                    <span class="font-bold uppercase">
+                        Welcome <span class="text-laravel"><?php echo e(auth()->user()->name); ?></span>
+                    </span>
+                </li>
+                <li>
+                    <a href="/listings/manage" class="hover:text-laravel select-none"><i class="fa-solid fa-gear"></i>
+                        Manage Listings</a>
+                </li>
+                <li>
+                    <form action="/logout" method="post" class="inline">
+                        <?php echo csrf_field(); ?>
+                        <button type="submit" class="hover:text-laravel">
+                            <i class="fa-solid fa-door-closed"></i> Logout
+                        </button>
+                    </form>
+                </li>
+            <?php else: ?>
+                <li>
+                    <a href="/register" class="text-laravel select-none"><i class="fa-solid fa-user-plus"></i>
+                        Register</a>
+                </li>
+                <li>
+                    <a href="/login" class="hover:text-laravel select-none"><i
+                            class="fa-solid fa-arrow-right-to-bracket"></i>
+                        Login</a>
+                </li>
+            <?php endif; ?>
         </ul>
     </nav>
     <main>

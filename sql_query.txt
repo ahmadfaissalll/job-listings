@@ -1,0 +1,15 @@
+select user_id, max(jumlah_postingan) from (select user_id, count(user_id) as jumlah_postingan from listings group by user_id) pd;
+
+select max(jumlah_postingan ) as postingan_terbanyak from (select count(user_id) as jumlah_postingan from listings group by user_id) as pd;
+
+select user_id, max(jumlah_postingan) as postingan_terbanyak from (select user_id, count(user_id) as jumlah_postingan from listings group by user_id) pd where jumlah_postingan = (select max(jumlah_postingan ) as postingan_terbanyak from (select count(user_id) as jumlah_postingan from listings group by user_id) as pd);
+
+ select user_id, count(user_id) as jumlah_postingan from listings group by user_id where jumlah_postingan = (select max(jumlah_postingan ) as postingan_terbanyak from (select count(user_id) as jumlah_postingan from listings group by user_id) ;
+
+select max(jumlah_postingan ) as postingan_terbanyak from (select count(user_id) as jumlah_postingan from listings group by user_id) as jumlah_postingan;
+
+select user_id, count(user_id) as jumlah_listing from listings group by user_id having jumlah_listing = (select max(jumlah_listing) as most_listing from (select count(user_id) as jumlah_listing from listings group by user_id) as jumlah_listing) ;
+
+select user_id, count(user_id) as jumlah_listing from listings group by user_id having jumlah_listing = (select max(jumlah_listing) as most_listing from (select count(user_id) as jumlah_listing from listings group by user_id) as jumlah_listing) ;
+
+select jl.user_id, usr.name ,jl.jumlah_listing from (select user_id, count(user_id) as jumlah_listing from listings group by user_id having jumlah_listing = (select max(jumlah_listing) as most_listing from (select count(user_id) as jumlah_listing from listings group by user_id) as jumlah_listing)) as jl inner join users as usr on (user_id = usr.id);
