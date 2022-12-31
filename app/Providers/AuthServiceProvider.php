@@ -27,7 +27,8 @@ class AuthServiceProvider extends ServiceProvider
   {
     $this->registerPolicies();
 
-    Gate::define('manipulate-listing', function (User $user, Listing $listing) {
+    // check listing owner
+    Gate::define('is-listing-owner', function (User $user, Listing $listing) {
       return $user->id === $listing->user_id;
     });
   }

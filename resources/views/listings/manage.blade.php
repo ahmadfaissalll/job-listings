@@ -1,5 +1,5 @@
 <x-layout>
-    <div class="bg-gray-50 border border-gray-200 p-10 rounded">
+    <x-card class="p-10">
         <header>
             <h1 class="text-3xl text-center font-bold my-6 uppercase">
                 Manage Gigs
@@ -11,17 +11,18 @@
                 @foreach ($listings as $listing)
                     <tr class="border-gray-300">
                         <td class="px-4 py-8 border-t border-b border-gray-300 text-lg">
-                            <a href="{{ route('listings.show', encrypt($listing->id, serialize: false)) }}">
+                            <a href="{{ route('listings.show', Crypt::encryptString($listing->id)) }}">
                                 {{ $listing->title }}
                             </a>
                         </td>
                         <td class="px-4 py-8 border-t border-b border-gray-300 text-lg">
-                            <a href="{{ route('listings.edit', encrypt($listing->id, serialize: false)) }}"
+                            <a href="{{ route('listings.edit', Crypt::encryptString($listing->id)) }}"
                                 class="text-blue-400 px-6 py-2 rounded-xl"><i class="fa-solid fa-pen-to-square"></i>
                                 Edit</a>
                         </td>
                         <td class="px-4 py-8 border-t border-b border-gray-300 text-lg">
-                            <form action="{{ route('listings.destroy', encrypt($listing->id, serialize: false)) }}" method="post">
+                            <form action="{{ route('listings.destroy', Crypt::encryptString($listing->id)) }}"
+                                method="post">
                                 @csrf
                                 @method('DELETE')
                                 <button class="text-red-600">
@@ -34,5 +35,9 @@
                 @endforeach
             </tbody>
         </table>
-    </div>
+        <div class="mt-6 p-4">
+            {{ $listings->links() }}
+        </div>
+    </x-card>
+
 </x-layout>

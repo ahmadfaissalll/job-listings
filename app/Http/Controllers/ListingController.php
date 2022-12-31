@@ -17,10 +17,7 @@ class ListingController extends Controller
 
   public function __construct()
   {
-    // $this->middleware('auth');
-    //     $this->middleware('log')->only('index');
     $this->middleware('auth')->except(['index', 'show']);
-    // $this->middleware('auth')->only('create');
   }
 
   // Show all listings
@@ -93,9 +90,9 @@ class ListingController extends Controller
 
     // $listings = Listing::latest()->filter(request(['tag', 'search']))->simplePaginate(6);
     // $listings = Listing::orderByDesc('created_at')->filter(request(['tag', 'search']))->paginate(6);
-    // $listings = Listing::orderByDesc('created_at')->filter(request(['tag', 'search']))->paginate(6);
+    $listings = Listing::orderByDesc('created_at')->filter(request(['tag', 'search']))->paginate(6);
 
-    $listings = auth()->user()->listings()->filter(request(['tag', 'search']))->paginate(6);
+    // $listings = $listing->filter(request(['tag', 'search']))->paginate(6);
 
     return response()
       ->view('listings.index', [
@@ -133,11 +130,6 @@ class ListingController extends Controller
     }
 
     $listing = Listing::findOrFail($id);
-
-    // tampilkan error 403 jika user bukan pemilik listing
-    if (Gate::denies('manipulate-listing', $listing)) {
-      abort(403);
-    }
 
     return response(view('listings.show', [
       'listing' => $listing,
@@ -258,8 +250,8 @@ class ListingController extends Controller
 
     $listing = Listing::findOrFail($id);
 
-    // tampilkan error 403 jika user bukan pemilik listing
-    if (Gate::denies('manipulate-listing', $listing)) {
+    // abort if user is not listing owner
+    if ( Gate::denies('is-listing-owner', $listing) ) {
       abort(403);
     }
 
@@ -279,8 +271,8 @@ class ListingController extends Controller
 
     $listing = Listing::findOrFail($id);
 
-    // tampilkan error 403 jika user bukan pemilik listing
-    if (Gate::denies('manipulate-listing', $listing)) {
+    // abort if user is not listing owner
+    if ( Gate::denies('is-listing-owner', $listing) ) {
       abort(403);
     }
 
@@ -350,8 +342,8 @@ class ListingController extends Controller
 
     $listing = Listing::findOrFail($id);
 
-    // tampilkan error 403 jika user bukan pemilik listing
-    if (Gate::denies('manipulate-listing', $listing)) {
+    // abort if user is not listing owner
+    if ( Gate::denies('is-listing-owner', $listing) ) {
       abort(403);
     }
 
